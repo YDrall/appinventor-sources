@@ -6,14 +6,9 @@
 
 package com.google.appinventor.components.runtime;
 
-import com.google.appinventor.components.annotations.DesignerProperty;
-import com.google.appinventor.components.annotations.DesignerComponent;
-import com.google.appinventor.components.annotations.PropertyCategory;
-import com.google.appinventor.components.annotations.SimpleEvent;
-import com.google.appinventor.components.annotations.SimpleFunction;
-import com.google.appinventor.components.annotations.SimpleObject;
-import com.google.appinventor.components.annotations.SimpleProperty;
-import com.google.appinventor.components.annotations.UsesPermissions;
+import android.content.ComponentName;
+import com.google.appinventor.components.annotations.*;
+import com.google.appinventor.components.annotations.androidmanifest.ActivityElement;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.common.YaVersion;
@@ -26,6 +21,7 @@ import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import com.google.camera.android.CameraActivity;
 
 import java.io.File;
 import java.util.Date;
@@ -45,6 +41,14 @@ import java.util.Date;
    nonVisible = true,
    iconName = "images/camera.png")
 @SimpleObject
+@UsesActivities(activities = {
+        @ActivityElement(name = "com.google.camera.android.CameraActivity",
+                screenOrientation = "landscape",
+                stateNotNeeded = "true",
+                configChanges = "orientation|keyboardHidden",
+                theme = "@android:style/Theme.NoTitleBar.Fullscreen",
+                windowSoftInputMode = "stateAlwaysHidden")
+})
 @UsesPermissions(permissionNames = "android.permission.WRITE_EXTERNAL_STORAGE, android.permission.READ_EXTERNAL_STORAGE")
 public class Camera extends AndroidNonvisibleComponent
     implements ActivityResultListener, Component {
@@ -81,7 +85,7 @@ public class Camera extends AndroidNonvisibleComponent
    *
    * @return {@code true} indicates front-facing is to be used, {@code false} will open default
    */
-  @Deprecated
+//  @Deprecated
   @SimpleProperty(category = PropertyCategory.BEHAVIOR)
   public boolean UseFront() {
     return useFront;
@@ -93,9 +97,9 @@ public class Camera extends AndroidNonvisibleComponent
    * @param front
    *          {@code true} for front-facing camera, {@code false} for default
    */
-  @Deprecated
+//  @Deprecated
   // Hide the deprecated property from the Designer
-  //  @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_BOOLEAN, defaultValue = "False")
+  @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_BOOLEAN, defaultValue = "False")
   @SimpleProperty(description = "Specifies whether the front-facing camera should be used (when available). "
     + "If the device does not have a front-facing camera, this option will be ignored "
     + "and the camera will open normally.")
@@ -109,9 +113,15 @@ public class Camera extends AndroidNonvisibleComponent
    */
   @SimpleFunction
   public void TakePicture() {
-    Date date = new Date();
-    String state = Environment.getExternalStorageState();
+    Intent fakeIntent = new Intent("com.google.camera.android.CAMERA");
+    fakeIntent.setComponent(new ComponentName(container.$form().getPackageName(),"com.google.camera.android.CameraActivity"));
+    if(useFront) {
+      fakeIntent.putExtra("front", "true");
+    }
+    container.$context().startActivityForResult(fakeIntent, requestCode);
 
+    /*Date date = new Date();
+    String state = Environment.getExternalStorageState();
     if (Environment.MEDIA_MOUNTED.equals(state)) {
       Log.i("CameraComponent", "External storage is available and writable");
 
@@ -139,14 +149,13 @@ public class Camera extends AndroidNonvisibleComponent
         intent.putExtra("android.intent.extras.CAMERA_FACING", 1);
       }
 
-      container.$context().startActivityForResult(intent, requestCode);
     } else if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
       form.dispatchErrorOccurredEvent(this, "TakePicture",
           ErrorMessages.ERROR_MEDIA_EXTERNAL_STORAGE_READONLY);
     } else {
       form.dispatchErrorOccurredEvent(this, "TakePicture",
           ErrorMessages.ERROR_MEDIA_EXTERNAL_STORAGE_NOT_AVAILABLE);
-    }
+    }*/
   }
 
   @Override
